@@ -1,0 +1,55 @@
+name: Terraform Apply
+
+on:
+    workflow_call:
+        inputs:
+            environment:
+                type: string
+                description: the environment to deploy to
+
+permissions:
+  id-token: write
+  contents: read
+                
+jobs:
+    Build-Infrastructure:
+        runs-on: ubuntu-latest
+        env:
+            BACKEND_CONFIG: ./environments/${{inputs.environment}}/backend.config 
+            TFVARS_FILE: ./environments/${{inputs.environment}}/${{inputs.environment}}.tfvars
+        steps:
+            - name: AWS Login - Application Environment
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                role-to-assume: arn:aws:iam::${{ inputs.aws_account_id }}:role/ROLENAME #TODO: We need a role to deploy stuff
+                aws-region: us-east-1
+        
+            - name: Checkout Terraform
+              uses: actions/checkout@v3
+              with:
+                repository: ${{ github.repository }}
+                ref: ${{ inputs.environment }}
+
+            - name: Terraform Setup
+              shell: bash
+              run: |
+                sudo apt-get install unzip
+                wget https://releases.hashicorp.com/terraform/1.12.2/terraform_1.12.2_linux_amd64.zip > /dev/null
+                unzip terraform_1.12.2_linux_amd64.zip
+                sudo mv terraform /usr/local/bin/
+                terraform init -backend-config="${{ env.BACKEND_CONFIG }}"
+                terraform get -update
+            
+            - name: Terraform Plan
+              shell: bash
+              run: |
+                terraform plan --var-file="${{ env.TFVARS_FILE}}"
+            
+            - name: Terraform Apply
+              shell: bash
+              run: |
+                terraform apply --var-file="${{ env.TFVARS_FILE}}" -auto-approve
+            
+            
+              
+              
