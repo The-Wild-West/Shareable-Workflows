@@ -18,10 +18,23 @@ jobs:
             BACKEND_CONFIG: ./environments/${{inputs.environment}}/backend.config 
             TFVARS_FILE: ./environments/${{inputs.environment}}/${{inputs.environment}}.tfvars
         steps:
+            - name: Set Accout ID
+              id : set_account_id
+              shell: bash
+              run: |
+               set -e
+               if [${{ inputs.environment }} -eq 'dev']; then
+                echo "aws_account_id=" >> "$GITHUB_OUTPUT"
+               elif [${{ inputs.environment }} -eq 'uat']; then
+                echo "aws_account_id=" >> "$GITHUB_OUTPUT"
+               elif [${{ inputs.environment }} -eq 'prod']; then
+                echo "aws_account_id=" >> "$GITHUB_OUTPUT"
+               else 
+                exit 1
             - name: AWS Login - Application Environment
               uses: aws-actions/configure-aws-credentials@v4
               with:
-                role-to-assume: arn:aws:iam::${{ inputs.aws_account_id }}:role/ROLENAME #TODO: We need a role to deploy stuff
+                role-to-assume: arn:aws:iam::${{ steps.set_account_id.outputs.aws_account_id }}:role/ROLENAME #TODO: We need a role to deploy stuff
                 aws-region: us-east-1
         
             - name: Checkout Terraform
