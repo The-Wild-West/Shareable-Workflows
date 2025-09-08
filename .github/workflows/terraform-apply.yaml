@@ -33,13 +33,13 @@ jobs:
               id : set_account_id
               shell: bash
               run: |
-               if [${{ inputs.environment }} -eq 'dev']; then
+               if ['${{ inputs.environment }}' -eq 'dev']; then
                 AWS_ACCOUNT_ID=$(aws ssm get-parameter --name "The-Wild-West-AccountID-Dev")
                 echo "aws_account_id=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
-               elif [${{ inputs.environment }} -eq 'uat']; then
+               elif ['${{ inputs.environment }}' -eq 'uat']; then
                 AWS_ACCOUNT_ID=$(aws ssm get-parameter --name "The-Wild-West-AccountID-Uat")
                 echo "aws_account_id=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
-               elif [${{ inputs.environment }} -eq 'prod']; then
+               elif ['${{ inputs.environment }}' -eq 'prod']; then
                 AWS_ACCOUNT_ID=$(aws ssm get-parameter --name "The-Wild-West-AccountID-Prod")
                 echo "aws_account_id=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
                else 
