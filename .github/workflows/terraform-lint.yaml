@@ -1,0 +1,41 @@
+name: Terraform Linter
+
+on:
+    workflow_call:
+        inputs:
+            environment:
+                type: string
+                description: the environment to deploy to
+
+permissions:
+  id-token: write
+  contents: read
+                
+jobs:
+    tf-linter:
+     runs-on: ubuntu-latest
+     steps:
+        - name: Checkout Repository
+          uses: actions/checkout@v4 # Use the latest stable version
+
+        - name: Cache TFLint Plugins
+          uses: actions/cache@v4 # Use the latest stable version
+          with:
+            path: ~/.tflint.d/plugins
+            key: ${{ runner.os }}-tflint-${{ hashFiles('.tflint.hcl') }}
+            restore-keys: |
+             ${{ runner.os }}-tflint-
+
+        - name: Setup TFLint
+          uses: terraform-linters/setup-tflint@v3 # Use the latest stable version
+          with:
+            tflint_version: latest # Or a specific version like '0.48.0'
+
+        - name: Show TFLint Version
+          run: tflint --version
+
+        - name: Initialize TFLint (Install Plugins)
+          run: tflint --init
+
+        - name: Run TFLint
+          run: tflint -f compact --recursive

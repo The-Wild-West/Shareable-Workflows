@@ -3,9 +3,14 @@ name: Terraform Apply
 on:
     workflow_call:
         inputs:
-            environment:
-                type: string
-                description: the environment to deploy to
+          environment:
+            type: string
+            description: the environment to deploy to
+        secrets:
+          admin_account_id:
+            description: the account id of secret storage
+          role_name:
+            description: the oidc provider role
 
 permissions:
   id-token: write
@@ -18,24 +23,34 @@ jobs:
             BACKEND_CONFIG: ./environments/${{inputs.environment}}/backend.config 
             TFVARS_FILE: ./environments/${{inputs.environment}}/${{inputs.environment}}.tfvars
         steps:
+            - name: AWS Login - Application Environment
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                role-to-assume: arn:aws:iam::${{ secrets.admin_account_id }}:role/${{ secrets.role_name }}
+                aws-region: us-east-1
+            
             - name: Set Accout ID
               id : set_account_id
               shell: bash
               run: |
                set -e
                if [${{ inputs.environment }} -eq 'dev']; then
-                echo "aws_account_id=" >> "$GITHUB_OUTPUT"
+                AWS_ACCOUNT_ID=$(aws ssm get-parameter --name "The-Wild-West-AccountID-Dev")
+                echo "aws_account_id=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
                elif [${{ inputs.environment }} -eq 'uat']; then
-                echo "aws_account_id=" >> "$GITHUB_OUTPUT"
+                AWS_ACCOUNT_ID=$(aws ssm get-parameter --name "The-Wild-West-AccountID-Uat")
+                echo "aws_account_id=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
                elif [${{ inputs.environment }} -eq 'prod']; then
-                echo "aws_account_id=" >> "$GITHUB_OUTPUT"
+                AWS_ACCOUNT_ID=$(aws ssm get-parameter --name "The-Wild-West-AccountID-Prod")
+                echo "aws_account_id=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
                else 
                 echo "Unable to establish account id!"
                 exit 1
+
             - name: AWS Login - Application Environment
               uses: aws-actions/configure-aws-credentials@v4
               with:
-                role-to-assume: arn:aws:iam::${{ steps.set_account_id.outputs.aws_account_id }}:role/ROLENAME #TODO: We need a role to deploy stuff
+                role-to-assume: arn:aws:iam::${{ steps.set_account_id.outputs.aws_account_id }}:role/${{ secrets.role_name }}
                 aws-region: us-east-1
         
             - name: Checkout Terraform
