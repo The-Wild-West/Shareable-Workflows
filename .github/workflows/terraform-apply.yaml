@@ -34,13 +34,13 @@ jobs:
               shell: bash
               run: |
                 if [[ '${{ inputs.environment }}' == 'dev' ]]; then
-                  AWS_ACCOUNT_ID=$(aws ssm get-parameter --name "The-Wild-West-AccountID-Dev" | jq -r '.Parameter.Value'))
+                  AWS_ACCOUNT_ID=$(aws ssm get-parameter --name "The-Wild-West-AccountID-Dev" | jq -r '.Parameter.Value')
                   echo "aws_account_id=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
                 elif [[ '${{ inputs.environment }}' == 'uat' ]]; then
-                  AWS_ACCOUNT_ID=$(aws ssm get-parameter --name "The-Wild-West-AccountID-Uat" | jq -r '.Parameter.Value'))
+                  AWS_ACCOUNT_ID=$(aws ssm get-parameter --name "The-Wild-West-AccountID-Uat" | jq -r '.Parameter.Value')
                   echo "aws_account_id=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
                 elif [[ '${{ inputs.environment }}' == 'prod' ]]; then
-                  AWS_ACCOUNT_ID=$(aws ssm get-parameter --name "The-Wild-West-AccountID-Prod" | jq -r '.Parameter.Value'))
+                  AWS_ACCOUNT_ID=$(aws ssm get-parameter --name "The-Wild-West-AccountID-Prod" | jq -r '.Parameter.Value')
                   echo "aws_account_id=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
                 else
                   echo "Unable to establish account id!"
