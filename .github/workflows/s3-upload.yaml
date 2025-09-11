@@ -60,4 +60,6 @@ jobs:
               shell: bash
               run: |
                 REPO=$(sed -E 's/The-Wild-West\///g;t' <<< ${{github.event.repository.name}})
-                aws s3 cp /home/runner/work/$REPO/* s3://the-wild-west-webpage-${{inputs.environment}} --recursive
+                aws s3 cp /home/runner/work/$REPO/* s3://the-wild-west-webpage-${{inputs.environment}} --recursive \
+                  --exclude '.git/*' \
+                  --exclude '.github/*'
