@@ -59,4 +59,5 @@ jobs:
             - name: Terraform Setup
               shell: bash
               run: |
-                aws s3 cp /home/runner/work/${{github.event.repository.name}}/${{github.event.repository.name}} s3://the-wild-west-${{inputs.environment}}/
+                REPO=$(sed -E 's/The-Wild-West\///g;t' <<< ${{github.event.repository.name}})
+                aws s3 cp /home/runner/work/$REPO/* s3://the-wild-west-${{inputs.environment}}
