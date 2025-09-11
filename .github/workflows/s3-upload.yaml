@@ -1,0 +1,62 @@
+name: Terraform Apply
+
+on:
+    workflow_call:
+        inputs:
+          environment:
+            type: string
+            description: the environment to deploy to
+        secrets:
+          admin_account_id:
+            description: the account id of secret storage
+          role_name:
+            description: the oidc provider role
+
+permissions:
+  id-token: write
+  contents: read
+                
+jobs:
+    Build-Infrastructure:
+        runs-on: ubuntu-latest
+        steps:
+            - name: AWS Login - Management Environment
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                role-to-assume: arn:aws:iam::${{ secrets.admin_account_id }}:role/${{ secrets.role_name }}
+                aws-region: us-east-1
+            
+            - name: Set Account ID
+              id: set_account_id
+              shell: bash
+              run: |
+                if [[ '${{ inputs.environment }}' == 'dev' ]]; then
+                  AWS_ACCOUNT_ID=$(aws ssm get-parameter --name "The-Wild-West-AccountID-Dev" | jq -r '.Parameter.Value')
+                  echo "aws_account_id=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
+                elif [[ '${{ inputs.environment }}' == 'uat' ]]; then
+                  AWS_ACCOUNT_ID=$(aws ssm get-parameter --name "The-Wild-West-AccountID-Uat" | jq -r '.Parameter.Value')
+                  echo "aws_account_id=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
+                elif [[ '${{ inputs.environment }}' == 'prod' ]]; then
+                  AWS_ACCOUNT_ID=$(aws ssm get-parameter --name "The-Wild-West-AccountID-Prod" | jq -r '.Parameter.Value')
+                  echo "aws_account_id=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
+                else
+                  echo "Unable to establish account id!"
+                  exit 1
+                fi
+
+            - name: AWS Login - Application Environment
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                role-to-assume: arn:aws:iam::${{ steps.set_account_id.outputs.aws_account_id }}:role/${{ secrets.role_name }}
+                aws-region: us-east-1
+        
+            - name: Checkout Repository
+              uses: actions/checkout@v3
+              with:
+                repository: ${{ github.repository }}
+                ref: ${{ inputs.environment }}
+
+            - name: Terraform Setup
+              shell: bash
+              run: |
+                aws s3 cp /home/runner/work/${{ github.repository }}/${{ github.repository }} s3://the-wild-west-${{inputs.environment}}/
