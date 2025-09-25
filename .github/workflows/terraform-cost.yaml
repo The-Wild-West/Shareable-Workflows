@@ -11,15 +11,13 @@ on:
 permissions:
   id-token: write
   contents: read
+  pull-requests: write
 
 jobs:
   infracost-pull-request-checks:
     name: Infracost Pull Request Checks
     if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize')
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
     steps:
         - name: AWS Login - Management Environment
           uses: aws-actions/configure-aws-credentials@v4
