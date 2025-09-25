@@ -42,6 +42,8 @@ jobs:
                 elif [[ '${{ inputs.environment }}' == 'prod' ]]; then
                   AWS_ACCOUNT_ID=$(aws ssm get-parameter --name "The-Wild-West-AccountID-Prod" | jq -r '.Parameter.Value')
                   echo "aws_account_id=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
+                elif [[ '${{ inputs.environment }}' == 'root' ]]; then
+                  echo "aws_account_id=${{ secrets.admin_account_id }}" >> "$GITHUB_OUTPUT"
                 else
                   echo "Unable to establish account id!"
                   exit 1
