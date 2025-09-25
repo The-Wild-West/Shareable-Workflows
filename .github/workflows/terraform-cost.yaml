@@ -31,7 +31,6 @@ jobs:
           run: |
             INFRACOST_API_KEY=$(aws ssm get-parameter --name "The-Wild-West-InfraCost-APIKey" | jq -r '.Parameter.Value')
             echo "infracost_api_key=$INFRACOST_API_KEY" >> "$GITHUB_OUTPUT"
-            fi
         - name: Setup Infracost
           uses: infracost/actions/setup@v3
           with:
