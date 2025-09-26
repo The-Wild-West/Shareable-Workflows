@@ -90,6 +90,18 @@ jobs:
               with:
                 role-to-assume: arn:aws:iam::${{ secrets.admin_account_id }}:role/${{ secrets.role_name }}
                 aws-region: us-east-1
+              
+            - name: Set Account ID
+              id: set_account_id
+              shell: bash
+              run: |
+                  AWS_ACCOUNT_ID_DEV=$(aws ssm get-parameter --name "The-Wild-West-AccountID-Dev" | jq -r '.Parameter.Value')
+                  echo "aws_account_id_dev=$AWS_ACCOUNT_ID_DEV" >> "$GITHUB_OUTPUT"
+                  AWS_ACCOUNT_ID_UAT=$(aws ssm get-parameter --name "The-Wild-West-AccountID-Uat" | jq -r '.Parameter.Value')
+                  echo "aws_account_id_uat=$AWS_ACCOUNT_ID_UAT" >> "$GITHUB_OUTPUT"
+                  AWS_ACCOUNT_ID_PROD=$(aws ssm get-parameter --name "The-Wild-West-AccountID-Prod" | jq -r '.Parameter.Value')
+                  echo "aws_account_id_prod=$AWS_ACCOUNT_ID_PROD" >> "$GITHUB_OUTPUT"
+                
             
             - name: Checkout Terraform
               uses: actions/checkout@v3
@@ -110,12 +122,19 @@ jobs:
             - name: Terraform Plan
               shell: bash
               run: |
-                terraform plan
+                terraform plan \
+                -var "dev_account_id=${{ steps.set_account_id.outputs.aws_account_id_dev }}" \
+                -var "uat_account_id=${{ steps.set_account_id.outputs.aws_account_id_uat }}" \
+                -var "prod_account_id=${{ steps.set_account_id.outputs.aws_account_id_prod }}" \
+            
             
             - name: Terraform Apply
               shell: bash
               run: |
-                terraform apply -auto-approve
+                terraform apply -auto-approve \
+                -var "dev_account_id=${{ steps.set_account_id.outputs.aws_account_id_dev }}" \
+                -var "uat_account_id=${{ steps.set_account_id.outputs.aws_account_id_uat }}" \
+                -var "prod_account_id=${{ steps.set_account_id.outputs.aws_account_id_prod }}" \
             
               
               
