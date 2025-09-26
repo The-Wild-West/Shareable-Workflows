@@ -18,7 +18,7 @@ permissions:
                 
 jobs:
     Build-Infrastructure-Applications:
-        if: ${{ inputs.environment }} != "root"
+        if: ${{ inputs.environment != 'root'}}
         runs-on: ubuntu-latest
         env:
             BACKEND_CONFIG: ./environments/${{inputs.environment}}/backend.config 
@@ -82,7 +82,7 @@ jobs:
               run: |
                 terraform apply --var-file="${{ env.TFVARS_FILE}}" -auto-approve
     Build-Infrastructure-Root:
-        if: ${{ inputs.environment }} == "root"
+        if: ${{ inputs.environment == 'root'}}
         runs-on: ubuntu-latest
         steps:
             - name: AWS Login - Management Environment
