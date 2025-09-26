@@ -17,7 +17,8 @@ permissions:
   contents: read
                 
 jobs:
-    Build-Infrastructure:
+    Build-Infrastructure-Applications:
+        if: ${{ inputs.environment }} != "root"
         runs-on: ubuntu-latest
         env:
             BACKEND_CONFIG: ./environments/${{inputs.environment}}/backend.config 
@@ -80,7 +81,41 @@ jobs:
               shell: bash
               run: |
                 terraform apply --var-file="${{ env.TFVARS_FILE}}" -auto-approve
+    Build-Infrastructure-Root:
+        if: ${{ inputs.environment }} == "root"
+        runs-on: ubuntu-latest
+        steps:
+            - name: AWS Login - Management Environment
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                role-to-assume: arn:aws:iam::${{ secrets.admin_account_id }}:role/${{ secrets.role_name }}
+                aws-region: us-east-1
             
+            - name: Checkout Terraform
+              uses: actions/checkout@v3
+              with:
+                repository: ${{ github.repository }}
+                ref: 'main'
+
+            - name: Terraform Setup
+              shell: bash
+              run: |
+                sudo apt-get install unzip
+                wget https://releases.hashicorp.com/terraform/1.12.2/terraform_1.12.2_linux_amd64.zip > /dev/null
+                unzip terraform_1.12.2_linux_amd64.zip
+                sudo mv terraform /usr/local/bin/
+                terraform init
+                terraform get -update
+            
+            - name: Terraform Plan
+              shell: bash
+              run: |
+                terraform plan
+            
+            - name: Terraform Apply
+              shell: bash
+              run: |
+                terraform apply -auto-approve
             
               
               
