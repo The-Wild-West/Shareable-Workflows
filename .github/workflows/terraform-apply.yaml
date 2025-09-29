@@ -65,10 +65,11 @@ jobs:
                 aws-region: us-east-1
         
             - name: Checkout Terraform Repository
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
               with:
                 repository: The-Wild-West/${{ github.event.repository.name }}-Infrastructure
                 ref: ${{ inputs.environment }}
+                fetch-depth: 1
 
             - name: Configure Git for Terraform
               shell: bash
