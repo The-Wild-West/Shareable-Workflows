@@ -1,0 +1,72 @@
+name: Terraform Destroy
+
+on:
+    workflow_call:
+        inputs:
+            environment:
+                type: string
+                description: the environment to destroy resources in
+        secrets:
+            admin_account_id:
+                description: the account id of secret storage
+            role_name:
+                description: the oidc provider role
+
+permissions:
+    id-token: write
+    contents: read
+
+jobs:
+    Teardown-Application-Infrastructure:
+        if: ${{ inputs.environment != 'root' && inputs.environment != 'prod'}}
+        runs-on: ubunutu-latest
+        env:
+            BACKEND_CONFIG: ./environments/${{inputs.environment}}/backend.config 
+            TFVARS_FILE: ./environments/${{inputs.environment}}/${{inputs.environment}}.tfvars
+        steps:
+            - name: AWS Login - Management Environment
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                role-to-assume: arn:aws:iam::${{ secrets.admin_account_id }}:role/${{ secrets.role_name }}
+                aws-region: us-east-1
+            
+            - name: Set Account ID
+              id: set_account_id
+              shell: bash
+              run: |
+                if [[ '${{ inputs.environment }}' == 'dev' ]]; then
+                  AWS_ACCOUNT_ID=$(aws ssm get-parameter --name "The-Wild-West-AccountID-Dev" | jq -r '.Parameter.Value')
+                  echo "aws_account_id=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
+                elif [[ '${{ inputs.environment }}' == 'uat' ]]; then
+                  AWS_ACCOUNT_ID=$(aws ssm get-parameter --name "The-Wild-West-AccountID-Uat" | jq -r '.Parameter.Value')
+                  echo "aws_account_id=$AWS_ACCOUNT_ID" >> "$GITHUB_OUTPUT"
+                else
+                  echo "Unable to establish account id!"
+                  exit 1
+                fi
+            - name: AWS Login - Application Environment
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                role-to-assume: arn:aws:iam::${{ steps.set_account_id.outputs.aws_account_id }}:role/${{ secrets.role_name }}
+                aws-region: us-east-1
+        
+            - name: Checkout Terraform
+              uses: actions/checkout@v3
+              with:
+                repository: ${{ github.repository }}
+                ref: ${{ inputs.environment }}
+
+            - name: Terraform Setup
+              shell: bash
+              run: |
+                sudo apt-get install unzip
+                wget https://releases.hashicorp.com/terraform/1.12.2/terraform_1.12.2_linux_amd64.zip > /dev/null
+                unzip terraform_1.12.2_linux_amd64.zip
+                sudo mv terraform /usr/local/bin/
+                terraform init -backend-config="${{ env.BACKEND_CONFIG }}"
+                terraform get -update
+            
+            - name: Terraform Destroy
+              shell: bash
+              run: |
+                terraform destroy --var-file="${{ env.TFVARS_FILE}}" -auto-approve
