@@ -50,11 +50,13 @@ jobs:
                 role-to-assume: arn:aws:iam::${{ steps.set_account_id.outputs.aws_account_id }}:role/${{ secrets.role_name }}
                 aws-region: us-east-1
         
-            - name: Checkout Terraform
-              uses: actions/checkout@v3
+            - name: Checkout Terraform Repository
+              uses: actions/checkout@v4
               with:
-                repository: ${{ github.repository }}
+                repository: The-Wild-West/${{ github.event.repository.name }}-Infrastructure
                 ref: ${{ inputs.environment }}
+                fetch-depth: 1
+                token: ${{ github.token }}
 
             - name: Terraform Setup
               shell: bash
