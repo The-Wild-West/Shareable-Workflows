@@ -19,7 +19,7 @@ permissions:
 jobs:
     Teardown-Application-Infrastructure:
         if: ${{ inputs.environment != 'root' && inputs.environment != 'prod'}}
-        runs-on: ubunutu-latest
+        runs-on: ubuntu-latest
         env:
             BACKEND_CONFIG: ./environments/${{inputs.environment}}/backend.config 
             TFVARS_FILE: ./environments/${{inputs.environment}}/${{inputs.environment}}.tfvars
