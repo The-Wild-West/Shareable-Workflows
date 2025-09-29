@@ -70,6 +70,7 @@ jobs:
                 repository: The-Wild-West/${{ github.event.repository.name }}-Infrastructure
                 ref: ${{ inputs.environment }}
                 fetch-depth: 1
+                token: ${{ github.token }}
 
             - name: Configure Git for Terraform
               shell: bash
