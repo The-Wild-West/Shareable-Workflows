@@ -49,6 +49,14 @@ jobs:
                   echo "Unable to establish account id!"
                   exit 1
                 fi
+            
+            - name: Get GitHub Token
+              shell: bash
+              run: |
+                SECRET_VALUE=$(aws ssm get-parameter --name "${{ env.SECRET_NAME }}" --query SecretString --output text --region us-east-1 )
+                echo "SHAREABLE_WORKFLOW_TOKEN=$SECRET_VALUE" >> $GITHUB_ENV
+              env:
+                SECRET_NAME: "Shareable_Workflow_Token"
 
             - name: AWS Login - Application Environment
               uses: aws-actions/configure-aws-credentials@v4
@@ -56,11 +64,18 @@ jobs:
                 role-to-assume: arn:aws:iam::${{ steps.set_account_id.outputs.aws_account_id }}:role/${{ secrets.role_name }}
                 aws-region: us-east-1
         
-            - name: Checkout Terraform
+            - name: Checkout Terraform Repository
               uses: actions/checkout@v3
               with:
-                repository: ${{ github.repository }}
+                repository: The-Wild-West/${{ github.event.repository.name }}-Infrastructure
                 ref: ${{ inputs.environment }}
+                token: ${{ env.SHAREABLE_WORKFLOW_TOKEN }}
+
+            - name: Configure Git for Terraform
+              shell: bash
+              run: |
+                git config --global url."https://${{ env.SHAREABLE_WORKFLOW_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
 
             - name: Terraform Setup
               shell: bash
