@@ -62,12 +62,17 @@ jobs:
                 aws-region: us-east-1
         
             - name: Checkout Terraform Repository
+              if: ${{ github.event.repository.name != 'Application-Networking-Infrastructure'}}
               uses: actions/checkout@v4
               with:
                 repository: The-Wild-West/${{ github.event.repository.name }}-Infrastructure
                 ref: ${{ inputs.environment }}
                 fetch-depth: 1
                 token: ${{ github.token }}
+            
+            - name: Checkout Terraform Repository
+              if: ${{ github.event.repository.name == 'Application-Networking-Infrastructure'}}
+              uses: actions/checkout@v4
 
             - name: Configure Git for Terraform
               shell: bash
