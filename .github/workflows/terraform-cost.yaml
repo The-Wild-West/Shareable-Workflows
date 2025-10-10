@@ -67,7 +67,7 @@ jobs:
 
             cat /tmp/infracost-base.json
 
-            infracost breakdown --path. --usage-file-infracost-usage.yml
+            infracost breakdown --path=. --usage-file-infracost-usage.yml
 
             cat infracost-usage.yml
       # Posts a comment to the PR using the 'update' behavior.
