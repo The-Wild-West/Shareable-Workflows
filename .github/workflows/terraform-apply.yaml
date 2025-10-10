@@ -115,7 +115,11 @@ jobs:
             - name: Get Terraform Outputs
               id: get_outputs
               run: |
-                echo "all_outputs_json=$(terraform output -json)" >> "$GITHUB_OUTPUT"
+                {
+                  echo "all_outputs_json<<EOF"
+                  terraform output -json
+                  echo "EOF"
+                } >> "$GITHUB_OUTPUT"
     Build-Infrastructure-Root:
         if: ${{ inputs.environment == 'root'}}
         runs-on: ubuntu-latest
@@ -177,7 +181,11 @@ jobs:
             - name: Get Terraform Outputs
               id: get_outputs
               run: |
-                echo "all_outputs_json=$(terraform output -json)" >> "$GITHUB_OUTPUT"
+                {
+                  echo "all_outputs_json<<EOF"
+                  terraform output -json
+                  echo "EOF"
+                } >> "$GITHUB_OUTPUT"
             
               
               
