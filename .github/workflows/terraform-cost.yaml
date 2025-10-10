@@ -57,13 +57,13 @@ jobs:
                           --compare-to=/tmp/infracost-base.json \
                           --out-file=/tmp/infracost.json
                 
-            cat infracost.json
+            cat /tmp/infracost.json
             
             # Show diff in logs for debugging
             infracost diff --path=. \
                           --compare-to=/tmp/infracost-base.json
 
-            cat infracost-base.json
+            cat /tmp/infracost-base.json
       # Posts a comment to the PR using the 'update' behavior.
       # This creates a single comment and updates it. The "quietest" option.
       # The other valid behaviors are:
