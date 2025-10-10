@@ -52,6 +52,8 @@ jobs:
 
         - name: Generate Infracost diff
           run: |
+            infracost generate config --repo-path=.  
+
             infracost diff --path=. \
                           --format=json \
                           --compare-to=/tmp/infracost-base.json \
@@ -64,6 +66,10 @@ jobs:
                           --compare-to=/tmp/infracost-base.json
 
             cat /tmp/infracost-base.json
+
+            infracost breakdown --path. --usage-file-infracost-usage.yml
+
+            cat infracost-usage.yml
       # Posts a comment to the PR using the 'update' behavior.
       # This creates a single comment and updates it. The "quietest" option.
       # The other valid behaviors are:
