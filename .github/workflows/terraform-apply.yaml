@@ -11,11 +11,17 @@ on:
             description: the account id of secret storage
           role_name:
             description: the oidc provider role
+        outputs:
+          all_outputs_json:
+            description: "All Terraform outputs as a JSON string"
+            value: ${{ inputs.environment != 'root' && jobs.Build-Infrastructure-Applications.outputs.all_outputs_json || inputs.environment == 'root' && jobs.Build-Infrastructure-Root.outputs.all_outputs_json }}
 
                 
 jobs:
     Build-Infrastructure-Applications:
         if: ${{ inputs.environment != 'root'}}
+        outputs:
+          all_outputs_json: ${{ steps.get_outputs.outputs.all_outputs_json }}
         runs-on: ubuntu-latest
         env:
             BACKEND_CONFIG: ./environments/${{inputs.environment}}/backend.config 
@@ -105,9 +111,21 @@ jobs:
               shell: bash
               run: |
                 terraform apply --var-file="${{ env.TFVARS_FILE}}" -auto-approve
+            
+            - name: Get Terraform Outputs
+              id: get_outputs
+              run: |
+                {
+                  echo "all_outputs_json<<EOF"
+                  terraform output -json
+                  echo "EOF"
+                } >> "$GITHUB_OUTPUT"
     Build-Infrastructure-Root:
         if: ${{ inputs.environment == 'root'}}
         runs-on: ubuntu-latest
+        outputs:
+          all_outputs_json: ${{ steps.get_outputs.outputs.all_outputs_json }}
+
         steps:
             - name: AWS Login - Management Environment
               uses: aws-actions/configure-aws-credentials@v4
@@ -159,6 +177,15 @@ jobs:
                 -var "dev_account_id=${{ steps.set_account_id.outputs.aws_account_id_dev }}" \
                 -var "uat_account_id=${{ steps.set_account_id.outputs.aws_account_id_uat }}" \
                 -var "prod_account_id=${{ steps.set_account_id.outputs.aws_account_id_prod }}" \
+            
+            - name: Get Terraform Outputs
+              id: get_outputs
+              run: |
+                {
+                  echo "all_outputs_json<<EOF"
+                  terraform output -json
+                  echo "EOF"
+                } >> "$GITHUB_OUTPUT"
             
               
               
